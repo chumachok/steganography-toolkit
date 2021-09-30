@@ -13,7 +13,11 @@ option_parser = OptionParser.new do |opts|
   end
 
   opts.on("-d", "--data data", "specify hidden data") do |data|
-    options[:data_path] = data
+    options[:data] = data
+  end
+
+  opts.on("-o", "--output filename", "specify output filename") do |filename|
+    options[:output_filename] = filename
   end
 
   opts.on("-p", "--password password", "specify password") do |password|
@@ -47,7 +51,12 @@ unless options[:embed] ^ options[:extract]
 end
 
 if options[:embed]
-  StegoToolkit::Core.new.embed(cover_medium: options[:cover_medium], data_path: options[:data_path], password: options[:password])
+  StegoToolkit::Core.new.embed(
+    cover_medium: options[:cover_medium],
+    data: options[:data],
+    output_filename: options[:output_filename],
+    password: options[:password],
+  )
 else
   StegoToolkit::Core.new.extract(cover_medium: options[:cover_medium], password: options[:password])
 end
