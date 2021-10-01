@@ -26,6 +26,7 @@ module StegoToolkit
       end
 
       private
+
       def generate_hash(password)
         OpenSSL::KDF.pbkdf2_hmac(password, salt: SALT, iterations: ITERATIONS, length: HASH_LENTH, hash: DIGEST)
       end

@@ -11,35 +11,33 @@ module StegoToolkit
     OUTPUT_DIR_DECRYPTED = File.join(__dir__, "..", "output", "decrypted")
     SEPARATOR = ":::"
 
-    def embed(cover_medium:, secret_path:, output_filename:, password:)
-      data = Magick::ImageList.new(secret_path)
-      data_pixels = data.export_pixels_to_str
+    def embed(cover_medium:, data:, output_filename:, password:)
+      secret_img = Magick::ImageList.new(data)
+      data_pixels = secret_img.export_pixels_to_str
 
       encrypted_data = Utils.encrypt(data: data_pixels, password: password)
 
-      data_binary = to_binary(encrypted_data + SEPARATOR)
-      filename_binary = to_binary(File.basename(secret_path) + SEPARATOR)
-      dimensions_binary = to_binary(format_dimensions(data) + SEPARATOR)
+      embed_data = to_binary(encrypted_data + SEPARATOR)
+      embed_filename = to_binary(File.basename(data) + SEPARATOR)
+      embed_dimensions = to_binary(format_dimensions(secret_img) + SEPARATOR)
 
-      validate!(cover_medium, data_binary, filename_binary, dimensions_binary)
-      cm = Magick::ImageList.new(cover_medium)
-      embeded_data = ImageProcessor.embed_data(
-        cover_medium: cm,
-        filename_binary: filename_binary,
-        dimensions_binary: dimensions_binary,
-        data_binary: data_binary
+      validate!(cover_medium, embed_data, embed_filename, embed_dimensions)
+      new_medium = ImageProcessor.embed_data(
+        cover_medium: cover_medium,
+        data: embed_data,
+        filename: embed_filename,
+        dimensions: embed_dimensions,
       )
 
-      embeded_data.write(File.join(OUTPUT_DIR_ENCRYPTED, output_filename))
+      ImageProcessor.write_image(path: File.join(OUTPUT_DIR_ENCRYPTED, output_filename), img: new_medium)
     end
 
     def extract(cover_medium:, password:)
-      cm = Magick::ImageList.new(cover_medium)
-      medium = ImageProcessor.convert_to_str(cover_medium: cm)
-      encrypted_data, output_filename, dimensions = medium.split(SEPARATOR)
+      medium_content = ImageProcessor.convert_to_str(cover_medium: cover_medium)
+      encrypted_data, output_filename, dimensions = medium_content.split(SEPARATOR)
 
       decrypted_data = Utils.decrypt(data: encrypted_data, password: password)
-      ImageProcessor.write_image(path: File.join(OUTPUT_DIR_DECRYPTED, output_filename), data: decrypted_data, dimensions: dimensions)
+      ImageProcessor.write_secret_image(path: File.join(OUTPUT_DIR_DECRYPTED, output_filename), data: decrypted_data, dimensions: dimensions)
     end
 
     private
@@ -52,14 +50,14 @@ module StegoToolkit
       "#{img.columns}x#{img.rows}"
     end
 
-    def validate!(cover_medium, data_binary, filename_binary, dimensions_binary)
+    def validate!(cover_medium, data, filename, dimensions)
       ext = File.extname(cover_medium)
       raise StandardError, ERROR_MESSAGE_FORMAT % ext unless ACCEPTED_FORMATS.include?(ext)
 
       cm_size = File.size(cover_medium)
-      data_size = data_binary.size
-      filename_size = filename_binary.size
-      dimensions_size = dimensions_binary.size
+      data_size = data.size
+      filename_size = filename.size
+      dimensions_size = dimensions.size
 
       raise StandardError, ERROR_MESSAGE_SIZE unless (data_size + filename_size + dimensions_size) <= cm_size
     end

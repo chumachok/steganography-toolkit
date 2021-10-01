@@ -4,13 +4,15 @@ module StegoToolkit
   class ImageProcessor
     class << self
       DIMENSIONS_SEPARATOR = "x"
+      MAP = "RGB"
 
-      def embed_data(cover_medium:, data_binary:, filename_binary:, dimensions_binary:)
-        medium_pixels = cover_medium.export_pixels
+      def embed_data(cover_medium:, data:, filename:, dimensions:)
+        cm = Magick::ImageList.new(cover_medium)
+        medium_pixels = cm.export_pixels
         offset = 0
 
         # embed data
-        [data_binary, filename_binary, dimensions_binary].each do |source|
+        [data, filename, dimensions].each do |source|
           source.each_char do |bit|
             mpb = to_8_bit_binary(medium_pixels[offset])
             mpb[-1] = bit
@@ -19,32 +21,36 @@ module StegoToolkit
           end
         end
 
-        medium = cover_medium.import_pixels(0, 0, cover_medium.columns, cover_medium.rows, "RGB", medium_pixels)
-
+        medium = cm.import_pixels(0, 0,cm.columns, cm.rows, MAP, medium_pixels)
         medium
       end
 
       def convert_to_str(cover_medium:)
-        medium_pixels = cover_medium.export_pixels
-        encrypted_data = ""
+        cm = Magick::ImageList.new(cover_medium)
+        medium_pixels = cm.export_pixels
+        medium_content = ""
         char = ""
 
         medium_pixels.each_with_index do |mp, i|
           mpb = to_8_bit_binary(mp)
           char << mpb[-1]
           if ((i + 1) % 8) == 0
-            encrypted_data << to_str(char)
+            medium_content << to_str(char)
             char = ""
           end
         end
 
-        encrypted_data
+        medium_content
       end
 
-      def write_image(path:, data:, dimensions:)
+      def write_image(path:, img:)
+        img.write(path)
+      end
+
+      def write_secret_image(path:, data:, dimensions:)
         width, height = dimensions.split(DIMENSIONS_SEPARATOR)
         pixels = data.chars.map { |c| c.ord }
-        img = Magick::Image.constitute(width.to_i, height.to_i, "RGB", pixels)
+        img = Magick::Image.constitute(width.to_i, height.to_i, MAP, pixels)
         img.write(path)
       end
 

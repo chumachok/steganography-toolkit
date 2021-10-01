@@ -3,8 +3,11 @@ require_relative "stego_toolkit/core"
 
 PROGNAME = File.basename(__FILE__)
 
-# ruby main.rb -m fixtures/cover_medium.bmp -s fixtures/secret.png -o message.bmp -p secret --embed
+# ruby main.rb -m fixtures/cover_medium.bmp -d fixtures/secret.png -o message.bmp -p secret --embed
 # ruby main.rb -m output/encrypted/message.bmp -p secret --extract
+
+# ruby main.rb -m fixtures/cover_medium.bmp -d fixtures/sisyphus.png -o message1.bmp -p secret --embed
+# ruby main.rb -m output/encrypted/message1.bmp -p secret --extract
 
 options = {}
 
@@ -15,8 +18,8 @@ option_parser = OptionParser.new do |opts|
     options[:cover_medium] = medium
   end
 
-  opts.on("-s", "--secret secret", "specify path to secret") do |secret|
-    options[:secret_path] = secret
+  opts.on("-d", "--data data", "specify path to secret") do |data|
+    options[:data] = data
   end
 
   opts.on("-o", "--output filename", "specify output filename") do |filename|
@@ -56,7 +59,7 @@ end
 if options[:embed]
   StegoToolkit::Core.new.embed(
     cover_medium: options[:cover_medium],
-    secret_path: options[:secret_path],
+    data: options[:data],
     output_filename: options[:output_filename],
     password: options[:password],
   )
