@@ -17,10 +17,10 @@ module StegoToolkit
       end
 
 
-      def decrypt(cover_medium:, password:)
+      def decrypt(data:, password:)
         cipher = OpenSSL::Cipher.new(CIPHER).decrypt
         cipher.key = generate_hash(password)
-        result = cipher.update(cover_medium) + cipher.final
+        result = cipher.update(data) + cipher.final
 
         result
       end
