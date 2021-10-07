@@ -26,6 +26,10 @@ option_parser = OptionParser.new do |opts|
     options[:output_filename] = filename
   end
 
+  opts.on("-c", "--cipher cipher", "specify cipher") do |cipher|
+    options[:cipher] = cipher
+  end
+
   opts.on("-p", "--password password", "specify password") do |password|
     options[:password] = password
   end
@@ -52,7 +56,7 @@ rescue OptionParser::InvalidOption => e
 end
 
 unless options[:embed] ^ options[:extract]
-  $stderr.puts "either the --embed or --extract flags must be present"
+  $stderr.puts "either the --embed or --extract flag must be present"
   exit(1)
 end
 
@@ -61,8 +65,13 @@ if options[:embed]
     cover_medium: options[:cover_medium],
     data: options[:data],
     output_filename: options[:output_filename],
+    cipher: options[:cipher],
     password: options[:password],
   )
 else
-  StegoToolkit::Core.new.extract(cover_medium: options[:cover_medium], password: options[:password])
+  StegoToolkit::Core.new.extract(
+    cover_medium: options[:cover_medium],
+    cipher: options[:cipher],
+    password: options[:password],
+  )
 end

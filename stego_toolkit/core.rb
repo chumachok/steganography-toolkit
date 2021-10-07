@@ -4,22 +4,24 @@ require "rmagick"
 
 module StegoToolkit
   class Core
-    ACCEPTED_FORMATS = [".bmp"]
+    ACCEPTED_FORMATS = [".bmp", ".png"]
     ERROR_MESSAGE_FORMAT = "unsupported file format %s"
     ERROR_MESSAGE_SIZE = "input data + metadata are too large"
     OUTPUT_DIR_ENCRYPTED = File.join(__dir__, "..", "output", "encrypted")
     OUTPUT_DIR_DECRYPTED = File.join(__dir__, "..", "output", "decrypted")
     SEPARATOR = ":::"
 
-    def embed(cover_medium:, data:, output_filename:, password:)
+    def embed(cover_medium:, data:, output_filename:, cipher:, password:)
       secret_img = Magick::ImageList.new(data)
       data_pixels = secret_img.export_pixels_to_str
 
-      encrypted_data = Utils.encrypt(data: data_pixels, password: password)
+      encrypted_data = Utils.encrypt(data: data_pixels, cipher: cipher, password: password)
+      encrypted_filename = Utils.encrypt(data: File.basename(data), cipher: cipher, password: password)
+      encrypted_dimensions = Utils.encrypt(data: format_dimensions(secret_img), cipher: cipher, password: password)
 
       embed_data = to_binary(encrypted_data + SEPARATOR)
-      embed_filename = to_binary(File.basename(data) + SEPARATOR)
-      embed_dimensions = to_binary(format_dimensions(secret_img) + SEPARATOR)
+      embed_filename = to_binary(encrypted_filename + SEPARATOR)
+      embed_dimensions = to_binary(encrypted_dimensions + SEPARATOR)
 
       validate!(cover_medium, embed_data, embed_filename, embed_dimensions)
       new_medium = ImageProcessor.embed_data(
@@ -32,11 +34,14 @@ module StegoToolkit
       ImageProcessor.write_image(path: File.join(OUTPUT_DIR_ENCRYPTED, output_filename), img: new_medium)
     end
 
-    def extract(cover_medium:, password:)
+    def extract(cover_medium:, cipher:, password:)
       medium_content = ImageProcessor.convert_to_str(cover_medium: cover_medium)
-      encrypted_data, output_filename, dimensions = medium_content.split(SEPARATOR)
+      encrypted_data, encrypted_filename, encrypted_dimensions = medium_content.split(SEPARATOR)
 
-      decrypted_data = Utils.decrypt(data: encrypted_data, password: password)
+      decrypted_data = Utils.decrypt(data: encrypted_data, cipher: cipher, password: password)
+      output_filename = Utils.decrypt(data: encrypted_filename, cipher: cipher, password: password)
+      dimensions = Utils.decrypt(data: encrypted_dimensions, cipher: cipher, password: password)
+
       ImageProcessor.write_secret_image(path: File.join(OUTPUT_DIR_DECRYPTED, output_filename), data: decrypted_data, dimensions: dimensions)
     end
 
