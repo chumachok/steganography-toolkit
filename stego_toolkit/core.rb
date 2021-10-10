@@ -23,7 +23,7 @@ module StegoToolkit
       embed_filename = to_binary(encrypted_filename + SEPARATOR)
       embed_dimensions = to_binary(encrypted_dimensions + SEPARATOR)
 
-      validate!(cover_medium, embed_data, embed_filename, embed_dimensions)
+      validate!(cover_medium, data, embed_data, embed_filename, embed_dimensions)
       new_medium = ImageProcessor.embed_data(
         cover_medium: cover_medium,
         data: embed_data,
@@ -55,8 +55,8 @@ module StegoToolkit
       "#{img.columns}x#{img.rows}"
     end
 
-    def validate!(cover_medium, data, filename, dimensions)
-      ext = File.extname(cover_medium)
+    def validate!(cover_medium, secret_img, data, filename, dimensions)
+      ext = File.extname(secret_img)
       raise StandardError, ERROR_MESSAGE_FORMAT % ext unless ACCEPTED_FORMATS.include?(ext)
 
       cm_size = File.size(cover_medium)

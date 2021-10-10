@@ -6,9 +6,6 @@ PROGNAME = File.basename(__FILE__)
 # ruby main.rb -m fixtures/cover_medium.bmp -d fixtures/secret.png -o message.bmp -p secret --embed
 # ruby main.rb -m output/encrypted/message.bmp -p secret --extract
 
-# ruby main.rb -m fixtures/cover_medium.bmp -d fixtures/sisyphus.png -o message1.bmp -p secret --embed
-# ruby main.rb -m output/encrypted/message1.bmp -p secret --extract
-
 options = {}
 
 option_parser = OptionParser.new do |opts|
