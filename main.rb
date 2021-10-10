@@ -9,7 +9,8 @@ PROGNAME = File.basename(__FILE__)
 options = {}
 
 option_parser = OptionParser.new do |opts|
-  opts.banner = "usage: ruby #{PROGNAME} --medium <medium> --data <data> --password <password>"
+  opts.banner << "\nruby #{PROGNAME} -m <medium> -d <data> -p <password> -o <output_filename> -c <cipher> --embed"
+  opts.banner << "\nruby #{PROGNAME} -m <medium> -p <password> -c <cipher> --extract"
 
   opts.on("-m", "--medium medium", "specify cover medium") do |medium|
     options[:cover_medium] = medium
